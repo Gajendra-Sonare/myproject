@@ -1,0 +1,31 @@
+"""myproject URL Configuration
+
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/3.2/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.urls import include, path
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+"""
+from django.contrib import admin
+from django.urls import path
+from django.urls.resolvers import URLPattern
+from rest_framework.urlpatterns import format_suffix_patterns
+from index.views import stocks
+from django.http import HttpResponse
+
+def okay(request):
+    return HttpResponse('pretend-binary-data-here', content_type='image/jpeg')
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', stocks.as_view()),
+    path('favicon.ico', okay),
+]
+URLPattern = format_suffix_patterns(urlpatterns)
