@@ -1,34 +1,97 @@
 from pandastable import Table, TableModel
-from tkinter import *
 from tkinter.font import Font
 from tkinter import ttk
+from threading import *
+from tkinter import *
 import pandas as pd
 import requests
 import json
 import os
 
-def start():
-    def sentiment_analysis(company):
-        stock = {"name":company,"feature":"sentiment analysis"}
 
-        #r = requests.post("http://127.0.0.1:8000/",data=stock)
-        f = open(os.getcwd()+"/new/sentiment_analysis.json","r")
-        data = json.loads(f.read())
+def start():
+    company = symbol_input.get("1.0",END)
+
+    def sentiment_analysis_thread():
+        t2 = Thread(target=sentiment_analysis)
+        t2.start()
+
+    def sentiment_analysis():
+
+        def tv_win():
+            tv_page = Toplevel(root)
+            tv_page.title("table view")
+
+            df = pd.DataFrame(table)
+
+            tv = ttk.Treeview(tv_page)
+            cols = []
+            for i in df.columns:
+                cols.append(i)
+            tv['columns']= tuple(cols)
+            tv['show'] = 'headings'
+            tv.column('#0', width=0, stretch=NO)
+            tv.column('0', anchor=CENTER, width=80)
+            tv.column('1', anchor=CENTER, width=80)
+            tv.column('2', anchor=CENTER, width=80)
+            tv.column('3', anchor=CENTER, width=80)
+            tv.column('4', anchor=CENTER, width=80)
+            tv.column('5', anchor=CENTER, width=80)
+            print(len(cols),' ',cols,' ',cols[5],' ')
+            
+
+            tv.heading('#0', text='', anchor=CENTER)
+            tv.heading('0', text=cols[0], anchor=CENTER)
+            tv.heading('1', text=cols[1], anchor=CENTER)
+            tv.heading('2', text=cols[2], anchor=CENTER)
+            tv.heading('3', text=cols[3], anchor=CENTER)
+            tv.heading('4', text=cols[4], anchor=CENTER)
+            tv.heading('5', text=cols[5], anchor=CENTER)
+
+            print(df)
+            
+            t = []
+            for i in df.iloc[0]:
+                t.append(i)
+            tv.insert('','end',text='l1',values=(t))
+
+            tv.pack()
+
+        stock = {"name":company,"feature":"sentiment analysis"}
+        text_1 = tab2.create_text(50,10,anchor='nw',text="please wait....")
+        r = requests.post("http://127.0.0.1:8000/",data=stock)
+        data = json.loads(r.content)
+        #f = open(os.getcwd()+"/new/sentiment_analysis.json","r")
+        #data = json.loads(f.read())
 
         news = data['news']
         table = data['table']
         sentiment = data['mean sentiment']
+        Canvas.delete(tab2, text_1)
         #for sentiment analysis
         w = 10
         for i in news:
             tab2.create_text(50,w,text=i[0] + "  ( "+i[2]+" )",anchor='nw')
             w += 20
-        tab1.create_text(50,10,table,anchor='nw')
-        
-        
-    company = symbol_input.get("1.0",END)
-    sentiment_analysis(company)
+                
+        tv_btn = Button(tab2,text="click here to full details",command=tv_win)
+        tv_btn.pack(pady=70,padx=10,side=LEFT)
 
+    def stock_prediction():
+        text_2 = tab2.create_text(50,10,anchor='nw',text="please wait....")
+        stock = {"name":company,"feature":"stock prediction"}
+        r = requests.post("http://127.0.0.1:8000/",data=stock)
+        r = r.content
+        r = json.loads(r)
+        Canvas.delete(tab3, text_2)
+
+        tab3.create_text(50,10,text=r,anchor='nw')
+
+    def stock_prediction_thread():
+        t1 = Thread(target=stock_prediction)
+        t1.start()
+        
+    sentiment_analysis_thread()
 
 root = Tk()
 root.title("Stock Projection")
@@ -67,7 +130,5 @@ TabControl.add(tab1,text='Description')
 TabControl.add(tab2,text='News Sentiment Analysis')
 TabControl.add(tab3,text='Stock Price Forecast')
 TabControl.pack(expand=True,fill='both')
-
-
 
 root.mainloop()
