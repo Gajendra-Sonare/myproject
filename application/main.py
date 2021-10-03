@@ -1,3 +1,4 @@
+from requests.api import options
 from pandastable import Table, TableModel
 from tkinter.font import Font
 from tkinter import ttk
@@ -6,24 +7,21 @@ from tkinter import *
 import pandas as pd
 import requests
 import json
+import sys
 import os
 
 
 def start():
     company = symbol_input.get("1.0",END)
-
     def sentiment_analysis_thread():
         t2 = Thread(target=sentiment_analysis)
         t2.start()
 
     def sentiment_analysis():
-
         def tv_win():
             tv_page = Toplevel(root)
             tv_page.title("table view")
-
             df = pd.DataFrame(table)
-
             tv = ttk.Treeview(tv_page)
             cols = []
             for i in df.columns:
@@ -37,8 +35,6 @@ def start():
             tv.column('3', anchor=CENTER, width=80)
             tv.column('4', anchor=CENTER, width=80)
             tv.column('5', anchor=CENTER, width=80)
-            print(len(cols),' ',cols,' ',cols[5],' ')
-            
 
             tv.heading('#0', text='', anchor=CENTER)
             tv.heading('0', text=cols[0], anchor=CENTER)
@@ -48,37 +44,31 @@ def start():
             tv.heading('4', text=cols[4], anchor=CENTER)
             tv.heading('5', text=cols[5], anchor=CENTER)
 
-            print(df)
-            
-            t = []
-            for i in df.iloc[0]:
-                t.append(i)
-            tv.insert('','end',text='l1',values=(t))
-
+            for i in range(len(df)):
+                t = df.iloc[i].values.tolist()
+                tv.insert('','end',text='l1',values=(t))
             tv.pack()
 
-        stock = {"name":company,"feature":"sentiment analysis"}
         text_1 = tab2.create_text(50,10,anchor='nw',text="please wait....")
+        stock = {"name":company,"feature":"sentiment analysis"}
         r = requests.post("http://127.0.0.1:8000/",data=stock)
         data = json.loads(r.content)
-        #f = open(os.getcwd()+"/new/sentiment_analysis.json","r")
-        #data = json.loads(f.read())
-
         news = data['news']
         table = data['table']
         sentiment = data['mean sentiment']
         Canvas.delete(tab2, text_1)
-        #for sentiment analysis
+
         w = 10
         for i in news:
             tab2.create_text(50,w,text=i[0] + "  ( "+i[2]+" )",anchor='nw')
             w += 20
-                
+        
+        tab2.create_text(50,100,anchor="nw",text="News Sentiment Analyis: "+ str(sentiment['Mean Sentiment'][0]))        
         tv_btn = Button(tab2,text="click here to full details",command=tv_win)
         tv_btn.pack(pady=70,padx=10,side=LEFT)
 
     def stock_prediction():
-        text_2 = tab2.create_text(50,10,anchor='nw',text="please wait....")
+        text_2 = tab3.create_text(50,10,anchor='nw',text="please wait....")
         stock = {"name":company,"feature":"stock prediction"}
         r = requests.post("http://127.0.0.1:8000/",data=stock)
         r = r.content
@@ -92,6 +82,15 @@ def start():
         t1.start()
         
     sentiment_analysis_thread()
+    stock_prediction_thread()
+
+def restart_program():
+    """Restarts the current program.
+    Note: this function does not return. Any cleanup action (like
+    saving data) must be done before calling this function."""
+    python = sys.executable
+    os.execl(python, python, * sys.argv)
+
 
 root = Tk()
 root.title("Stock Projection")
@@ -99,12 +98,11 @@ root.geometry('700x400')
 root.config(bg='grey')
 
 menubar = Menu(root)
-file_menu = Menu(menubar,tearoff=0)
-file_menu.add_command(label="Help")
-file_menu.add_command(label="Exit",command=root.quit)
-file_menu.add_separator()
+option = Menu(menubar,tearoff=0)
+option.add_command(label="Restart",command=restart_program)
+option.add_command(label="Exit",command=root.quit)
 
-menubar.add_cascade(label="File",menu=file_menu)
+menubar.add_cascade(label="File",menu=option)
 root.config(menu=menubar)
 
 name = Label(root,text="Stock Projection")
