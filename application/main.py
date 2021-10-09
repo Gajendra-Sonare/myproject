@@ -2,8 +2,11 @@ from requests.api import options
 from pandastable import Table, TableModel
 from tkinter.font import Font
 from tkinter import ttk
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 from threading import *
 from tkinter import *
+from PIL import Image, ImageTk
 import pandas as pd
 import requests
 import json
@@ -75,7 +78,19 @@ def start():
         r = json.loads(r)
         Canvas.delete(tab3, text_2)
 
-        tab3.create_text(50,10,text=r,anchor='nw')
+        if "saved_graphs" not in os.listdir():
+            os.mkdir("saved_graphs")
+        df = r["output"]
+        df = pd.DataFrame(df)
+        fig,ax = plt.subplots()
+        ax.plot(df)
+        graph_path = os.path.join("saved_graphs","image.png")
+        plt.savefig(graph_path)
+        img = ImageTk.PhotoImage(Image.open(graph_path))
+        tab3.create_image(20,20,anchor='nw',image=img)
+        
+
+        #tab3.create_text(50,10,text=df,anchor='nw')
 
     def stock_prediction_thread():
         t1 = Thread(target=stock_prediction)
