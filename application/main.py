@@ -82,8 +82,8 @@ def start():
             os.mkdir("saved_graphs")
         df = r["output"]
         df = pd.DataFrame(df)
-        fig,ax = plt.subplots()
-        ax.plot(df)
+
+        plt.plot(df) # This gives warning and gui freezes
         graph_path = os.path.join("saved_graphs","image.png")
         plt.savefig(graph_path)
         img = ImageTk.PhotoImage(Image.open(graph_path))
