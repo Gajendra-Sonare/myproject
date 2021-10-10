@@ -1,6 +1,6 @@
 # myproject
 
-Go to application-> main.py
+Go to application-> main.py (line 86)
 
 Task: I want to use matplotlib there but it doesn't work with threads. Modify the code so that matplotlib can work without freezing the GUI.
 Or you can suggest a solution for this problem.
