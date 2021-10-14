@@ -3,8 +3,7 @@ from tkinter.font import Font
 from tkinter import ttk
 from numpy.lib.utils import info
 import yfinance
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
+import plotly.express as ex
 from threading import *
 from tkinter import *
 from PIL import Image, ImageTk
@@ -102,6 +101,7 @@ def start():
         tv_btn.pack(pady=70,padx=10,side=LEFT)
 
     def stock_prediction():
+        global img
         text_3 = tab3.create_text(50,10,anchor='nw',text="please wait....")
         stock = {"name":company,"feature":"stock prediction"}
         r = requests.post("http://127.0.0.1:8000/",data=stock)
@@ -113,18 +113,18 @@ def start():
             os.mkdir("saved_graphs")
         df = r["output"]
         df = pd.DataFrame(df)
-        #plt.plot(df)
-        #graph_path = os.path.join("saved_graphs","image.png")
-        #plt.savefig(graph_path)
-        #img = ImageTk.PhotoImage(Image.open(graph_path))
-        #tab3.create_image(20,20,anchor='nw',image=img)
-
+        fig = ex.line(df)
+        graph_path = os.path.join("saved_graphs","plot.png")
+        fig.write_image(graph_path)
+        img = ImageTk.PhotoImage(Image.open(r"{0}".format(graph_path)))
+        tab3.create_image(0,0,anchor="nw",image=img)
+        
     t1 = Thread(target=information)
     t2 = Thread(target=sentiment_analysis)
     t3 = Thread(target=stock_prediction)
-    t1.start()
+    #t1.start()
     t2.start()
-    #t3.start()
+    t3.start()
 
 def restart_program():
     """Restarts the current program.
