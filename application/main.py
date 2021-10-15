@@ -1,6 +1,7 @@
 import threading
 from tkinter.font import Font
 from tkinter import ttk
+from numpy.core.fromnumeric import size
 from numpy.lib.utils import info
 import yfinance
 import plotly.express as ex
@@ -41,7 +42,7 @@ def start():
             with open("real.txt","a") as ff:
                 ind = 0
                 for i in txt:
-                    if ind%20==0:
+                    if ind%15==0:
                         ff.write("\n")
                     ff.write(i+" ")
                     ind+=1
@@ -50,7 +51,7 @@ def start():
         Canvas.delete(tab1,text_1)
         del f
         f = open("real.txt","r")
-        tab1.create_text(20,0,anchor="nw",text=f.read())
+        tab1.create_text(20,0,anchor="nw",text=f.read(),font=("Comic Sans MS",15))
         f.close()
 
     def sentiment_analysis():
@@ -94,10 +95,10 @@ def start():
         Canvas.delete(tab2, text_2)
         w = 10
         for i in news:
-            tab2.create_text(50,w,text=i[0] + "  ( "+i[2]+" )",anchor='nw')
-            w += 20
-        tab2.create_text(50,100,anchor="nw",text="News Sentiment Analyis: "+ str(sentiment['Mean Sentiment'][0]))        
-        tv_btn = Button(tab2,text="click here to full details",command=tv_win)
+            tab2.create_text(50,w,text=i[0] + "  ( "+i[2]+" )",anchor='nw',font=("Comic Sans MS",15))
+            w += 30
+        tab2.create_text(50,130,anchor="nw",text="News Sentiment Analyis: "+ str(sentiment['Mean Sentiment'][0]),font=("Comic Sans MS",15))        
+        tv_btn = Button(tab2,text="click here for full details",command=tv_win,width=20,height =2,font=("Arial",10),border=10,borderwidth=5)
         tv_btn.pack(pady=70,padx=10,side=LEFT)
 
     def stock_prediction():
@@ -122,9 +123,9 @@ def start():
     t1 = Thread(target=information)
     t2 = Thread(target=sentiment_analysis)
     t3 = Thread(target=stock_prediction)
-    #t1.start()
+    t1.start()
     t2.start()
-    t3.start()
+    #t3.start()
 
 def restart_program():
     """Restarts the current program.
@@ -137,7 +138,9 @@ def restart_program():
 root = Tk()
 root.title("Stock Projection")
 root.geometry('700x400')
-root.config(bg='grey')
+root.config(bg='#429ef5')
+
+style = ttk.Style()
 
 menubar = Menu(root)
 option = Menu(menubar,tearoff=0)
@@ -147,21 +150,21 @@ menubar.add_cascade(label="File",menu=option)
 root.config(menu=menubar)
 
 name = Label(root,text="Stock Projection")
-name.configure(font=('Arial',20),fg='Black',bg='lightgrey')
+name.configure(font=('Arial',20),fg='Black',bg='lightgrey',width=200)
 name.pack()
 
-label1 = Label(root,text="Enter the symbol of any stock")
+label1 = Label(root,text="Enter the stock symbol",border=5)
 label1.pack(side='left',anchor='n',pady=20)
 symbol_input = Text(root)
-symbol_input.config(height=1,width=10,border=3)
-symbol_input.pack(padx=5,anchor='n',side=LEFT,pady=20)
-btn = Button(root,text="Okay",command=start)
-btn.pack(anchor='n',side=LEFT,pady=20)
+symbol_input.config(height=1,width=13,border=3,borderwidth=5)
+symbol_input.place(x=5,y=100)
+btn = Button(root,text='okay',command=start,width=10,border=5,borderwidth=5,bg='lightgreen')
+btn.place(x=10,y=140)
 
 TabControl = ttk.Notebook(root)
 tab1 = Canvas(TabControl,bg='lightgrey')
-tab2 = Canvas(TabControl)
-tab3 = Canvas(TabControl)
+tab2 = Canvas(TabControl,bg='lightgrey')
+tab3 = Canvas(TabControl,bg='lightgrey')
 TabControl.add(tab1,text='Description')
 TabControl.add(tab2,text='News Sentiment Analysis')
 TabControl.add(tab3,text='Stock Price Forecast')
