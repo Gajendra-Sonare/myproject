@@ -17,7 +17,7 @@ import os
 def start():
     company = symbol_input.get("1.0",END)
     def information():
-        text_1 = tab1.create_text(50,20,text="please wait....")
+        text_1 = tab1.create_text(100,20,text="please wait....",font=("Arial",15))
         data = yfinance.Ticker(company)
         inf = data.info
         df_inf = pd.DataFrame().from_dict(inf,orient='index')
@@ -85,7 +85,7 @@ def start():
                 tv.insert('','end',text='l1',values=(t))
             tv.pack()
 
-        text_2 = tab2.create_text(50,10,anchor='nw',text="please wait....")
+        text_2 = tab2.create_text(50,10,anchor='nw',text="please wait....",font=("Arial",15))
         stock = {"name":company,"feature":"sentiment analysis"}
         r = requests.post("http://127.0.0.1:8000/",data=stock)
         data = json.loads(r.content)
@@ -95,20 +95,22 @@ def start():
         Canvas.delete(tab2, text_2)
         w = 10
         for i in news:
-            tab2.create_text(50,w,text=i[0] + "  ( "+i[2]+" )",anchor='nw',font=("Comic Sans MS",15))
+            tab2.create_text(20,w,text="➡"+i[0] + "  ( "+i[2]+" )",anchor='nw',font=("Comic Sans MS",15))
             w += 30
-        tab2.create_text(50,130,anchor="nw",text="News Sentiment Analyis: "+ str(sentiment['Mean Sentiment'][0]),font=("Comic Sans MS",15))        
+        tab2.create_text(50,180,anchor="nw",text="News Sentiment Analysis: "+ str(sentiment['Mean Sentiment'][0]),font=("Comic Sans MS",15),fill='red')        
         tv_btn = Button(tab2,text="click here for full details",command=tv_win,width=20,height =2,font=("Arial",10),border=10,borderwidth=5)
         tv_btn.pack(pady=70,padx=10,side=LEFT)
 
     def stock_prediction():
         global img
-        text_3 = tab3.create_text(50,10,anchor='nw',text="please wait....")
+        text_3 = tab3.create_text(50,10,anchor='nw',text="please wait....",font=("Arial",15))
         stock = {"name":company,"feature":"stock prediction"}
         r = requests.post("http://127.0.0.1:8000/",data=stock)
         r = r.content
         r = json.loads(r)
-        Canvas.delete(tab3, text_3)
+
+        Canvas.delete(tab3,text_3)
+        text_3 = tab3.create_text(50,10,anchor='nw',text="Loading graphs....",font=("Arial",15))
 
         if "saved_graphs" not in os.listdir():
             os.mkdir("saved_graphs")
@@ -118,6 +120,7 @@ def start():
         graph_path = os.path.join("saved_graphs","plot.png")
         fig.write_image(graph_path)
         img = ImageTk.PhotoImage(Image.open(r"{0}".format(graph_path)))
+        Canvas.delete(tab3, text_3)
         tab3.create_image(0,0,anchor="nw",image=img)
         
     t1 = Thread(target=information)
@@ -125,7 +128,7 @@ def start():
     t3 = Thread(target=stock_prediction)
     t1.start()
     t2.start()
-    #t3.start()
+    t3.start()
 
 def restart_program():
     """Restarts the current program.
@@ -146,7 +149,7 @@ menubar = Menu(root)
 option = Menu(menubar,tearoff=0)
 option.add_command(label="Restart",command=restart_program)
 option.add_command(label="Exit",command=root.quit)
-menubar.add_cascade(label="File",menu=option)
+menubar.add_cascade(label="options",menu=option)
 root.config(menu=menubar)
 
 name = Label(root,text="Stock Projection")
