@@ -14,21 +14,28 @@ import numpy as np
 import threading
 import pickle
 import math
+
 from django.http import HttpResponse
 
 import warnings
 warnings.filterwarnings("ignore")
 
-def stock_prediction(company):
+def stock_prediction(company,exchange):
+    import nsepy
+    company = str(company).upper()
 
     start = dt.datetime(2012,1,1)
     end = dt.datetime(2020,1,1)
-    data = yf.download(company, start = start, end=end)
-
-    fig_1 = plt.figure(figsize=(14,6))
-    plt.title(company+"_chart")
-    plt.plot(data['Close'])
-    #plt.show()
+    print(company=='TCS')
+    if exchange == "US":
+        data = yf.download(company, start = start, end=end)
+    elif exchange == "IND":
+        data = nsepy.get_history(symbol=company,
+                   start=start,
+                   end=end)
+    else:
+        print("Error")
+    df1 = data
 
     data = data.filter(['Close'])
     dataset = data.values
@@ -47,10 +54,13 @@ def stock_prediction(company):
     x_train,y_train = np.array(x_train),np.array(y_train)
     x_train = np.reshape(x_train,(x_train.shape[0],x_train.shape[1],1))
 
-    filename = company + "_stock_prediction.h5"
+    filename = "stock_prediction.h5"
+    if( not "saved_models" in os.listdir()):
+        os.mkdir("saved_models")
     if filename in os.listdir("saved_models"):
         print("if block in progress")
-        model = tf.keras.models.load_model(os.path.join("saved_models",filename))
+        filename = os.path.join("saved_models",filename)
+        model = tf.keras.models.load_model(filepath=filename)
     else:
         print("else block in progress")
         model = Sequential()
@@ -67,8 +77,8 @@ def stock_prediction(company):
         model.compile(optimizer='adam',loss='mean_squared_error')
         #epochs 30minimum
         model.fit(x_train,y_train, epochs=2,batch_size=32)
-        filename = os.path.join("saved_models",company + "_stock_prediction.h5")
-        model.save(filename)
+        filename = os.path.join("saved_models","stock_prediction.h5")
+        model.save(filepath=filename)
 
 
 
@@ -92,26 +102,17 @@ def stock_prediction(company):
     valid = data[train_dataset_len:]
     valid['Predictions'] = predictions
 
-    fig2 = plt.figure(figsize=(16,8))
-    plt.title(company+"_Prediction")
-    plt.xlabel('Date',fontsize=18)
-    plt.ylabel('Close Price',fontsize=18)
-    plt.plot(train['Close'])
-    plt.plot(valid[['Close','Predictions']])
-    plt.legend(['train','val','prediction'],loc='lower right')
-    plt.savefig("output.jpg")
-    #plt.show()
-
-
-    df = yf.download(company ,start=dt.datetime(2021,5,1),end=dt.datetime(2021,8,10))
+    if exchange == "US":
+        df = yf.download(company ,start=dt.datetime(2021,5,1),end=dt.datetime(2021,8,10))
+    else:
+        df = nsepy.get_history(company ,start=dt.datetime(2021,5,1),end=dt.datetime(2021,8,10))
     df1 = df['Close']
     df = df.filter(['Close'])
-    df = df[:-10]
     df = np.array(df)
 
     scd = scaler.fit_transform(df)
 
-    x_input = test_data[test_data.shape[0] - prediction_days :].reshape(1,-1)
+    x_input = scd[scd.shape[0] - prediction_days :].reshape(1,-1)
     temp_input=list(x_input)
     temp_input=temp_input[0].tolist()
 
@@ -162,13 +163,12 @@ def stock_prediction(company):
     temp_data = x_input.reshape(-1,1)
     temp_data = scaler.inverse_transform(temp_data)
 
-    fig3 = plt.figure(figsize=(12,8))
-    plt.title('Forecast')
-    #plt.plot(lst_output)
-
-
-    fig4 = plt.figure(figsize=(12,8))
-    #plt.plot(df1)
-
+    #plt.plot(temp_data)
     #plt.show()
-    return HttpResponse("<h2>Success</h2>")
+    graphs = {}
+    graphs["output"] = temp_data
+
+    return graphs
+
+#g = stock_prediction("TCS","IND")
+#print(g)
