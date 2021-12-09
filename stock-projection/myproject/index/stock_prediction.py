@@ -25,7 +25,7 @@ def stock_prediction(company,exchange):
     company = str(company).upper()
 
     start = dt.datetime(2012,1,1)
-    end = dt.datetime(2020,1,1)
+    end = dt.datetime.today()
     print(company=='TCS')
     if exchange == "US":
         data = yf.download(company, start = start, end=end)
@@ -35,7 +35,11 @@ def stock_prediction(company,exchange):
                    end=end)
     else:
         print("Error")
-    df1 = data
+        return {}
+    
+    if data.empty:
+        print("dataframe is empty")
+        return {}
 
     data = data.filter(['Close'])
     dataset = data.values
@@ -57,12 +61,8 @@ def stock_prediction(company,exchange):
     filename = "stock_prediction.h5"
     if( not "saved_models" in os.listdir()):
         os.mkdir("saved_models")
-    if filename in os.listdir("saved_models"):
-        print("if block in progress")
-        filename = os.path.join("saved_models",filename)
-        model = tf.keras.models.load_model(filepath=filename)
-    else:
-        print("else block in progress")
+        
+    if True:
         model = Sequential()
         model.add(LSTM(50,return_sequences=True, input_shape=(x_train.shape[1],1)))
         model.add(Dropout(0.2))
@@ -76,7 +76,7 @@ def stock_prediction(company,exchange):
 
         model.compile(optimizer='adam',loss='mean_squared_error')
         #epochs 30minimum
-        model.fit(x_train,y_train, epochs=2,batch_size=32)
+        model.fit(x_train,y_train, epochs=30,batch_size=32)
         filename = os.path.join("saved_models","stock_prediction.h5")
         model.save(filepath=filename)
 
@@ -102,17 +102,7 @@ def stock_prediction(company,exchange):
     valid = data[train_dataset_len:]
     valid['Predictions'] = predictions
 
-    if exchange == "US":
-        df = yf.download(company ,start=dt.datetime(2021,5,1),end=dt.datetime(2021,8,10))
-    else:
-        df = nsepy.get_history(company ,start=dt.datetime(2021,5,1),end=dt.datetime(2021,8,10))
-    df1 = df['Close']
-    df = df.filter(['Close'])
-    df = np.array(df)
-
-    scd = scaler.fit_transform(df)
-
-    x_input = scd[scd.shape[0] - prediction_days :].reshape(1,-1)
+    x_input = scaled_data[scaled_data.shape[0] - prediction_days :].reshape(1,-1)
     temp_input=list(x_input)
     temp_input=temp_input[0].tolist()
 
@@ -150,14 +140,6 @@ def stock_prediction(company,exchange):
 
     print(lst_output)
 
-    day_new=np.arange(1,61)
-    day_pred=np.arange(61,91)
-
-    times = pd.date_range('2021-8-11', periods=30, freq="1440min")
-    future_dates = []
-    for x,y in enumerate(times):
-        if x%10==0:
-            future_dates.append(y)
 
     lst_output = scaler.inverse_transform(lst_output)
     temp_data = x_input.reshape(-1,1)
@@ -165,10 +147,9 @@ def stock_prediction(company,exchange):
 
     #plt.plot(temp_data)
     #plt.show()
+    predicted_prices = temp_data[-15:]
     graphs = {}
     graphs["output"] = temp_data
+    graphs["prediction"] = predicted_prices
 
     return graphs
-
-#g = stock_prediction("TCS","IND")
-#print(g)
